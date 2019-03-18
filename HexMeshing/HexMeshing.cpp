@@ -75,15 +75,15 @@ int main (int argc, char *argv[]) {
 		}
 		mesh.setTypes();
 		
-		vector<vector<Face>> patches = mesh.extractPatches();
+		// vector<vector<Face>> patches = mesh.extractPatches();
 		// vector<Face> c = patches[0];
 		vector<Edge> c;
 		// for (int i = 0; i < patches.size(); i++) {
-			vector<Edge> edges = mesh.extractFacesFromPatch(patches[0]);
+			// vector<Edge> edges = mesh.extractFacesFromPatch(patches[0]);
 			// cout << i << endl;
-			c.insert(c.begin(), edges.begin(), edges.end());
+			// c.insert(c.begin(), edges.begin(), edges.end());
 		// }
-		// vector<Edge> c = mesh.getBoundaryEdges();
+		vector<Edge> c = mesh.getBoundaryEdges();
 		cout << c.size() << endl;
 
 		ofstream outputFile;
