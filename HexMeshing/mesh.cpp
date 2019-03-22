@@ -2,7 +2,6 @@
 #include<math.h>
 #include<algorithm>
 #include<limits>
-#include<glm/glm.hpp>
 
 #include "Mesh.h"
 
