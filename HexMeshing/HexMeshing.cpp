@@ -77,7 +77,7 @@ int main (int argc, char *argv[]) {
 		
 		// vector<vector<Face>> patches = mesh.extractPatches();
 		// vector<Face> c = patches[0];
-		vector<Edge> c;
+		// vector<Edge> c;
 		// for (int i = 0; i < patches.size(); i++) {
 			// vector<Edge> edges = mesh.extractFacesFromPatch(patches[0]);
 			// cout << i << endl;

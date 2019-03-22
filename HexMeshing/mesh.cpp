@@ -2,6 +2,7 @@
 #include<math.h>
 #include<algorithm>
 #include<limits>
+#include<glm/glm.hpp>
 
 #include "Mesh.h"
 
@@ -204,13 +205,8 @@ vector<Edge> Mesh::getBoundaryEdges() {
 
 vector<double> Mesh::getTraceDirection(Face& f) {
     vector<double> direction;
-    int corner_index = 0;
-    for (int i = 0; i < f.v_ids.size(); i++) {
-        if (vertices.at(f.v_ids[i]).isCornerVertex) {
-            corner_index = i;
-            break;
-        }
-    }
+    int corner_index = getCornerIndex(f);
+    
     Vertex v0 = vertices.at(f.v_ids[corner_index]);
     Vertex v1 = vertices.at(f.v_ids[(corner_index + 1) % f.v_ids.size()]);
     Vertex v2 = vertices.at(f.v_ids[(corner_index + 2) % f.v_ids.size()]);
@@ -229,17 +225,13 @@ vector<double> Mesh::getTraceDirection(Face& f) {
         double dotB = fabs((getDotProduct(n, b)) / ((getVectorLength(n)) * (getVectorLength(b))));
         // cout << "dotA: " << dotA << endl;
         // cout << "dotB: " << dotB << endl;
-        double crossA = getVectorLength(getCrossProduct(n, a)) / (getVectorLength(n) * getVectorLength(a));
-        double crossB = getVectorLength(getCrossProduct(n, b)) / (getVectorLength(n) * getVectorLength(b));
-        // cout << "crossA: " << crossA << endl;
-        // cout << "crossB: " << crossB << endl;
         
         // cout << "==============================" << endl;
-        if (crossA == 0) {
+        if (dotA == 1) {
             // direction = normalizeVector(a);
             direction = a;
             break;
-        } else if (crossB == 0) {
+        } else if (dotB == 1) {
             // direction = normalizeVector(b);
             direction = b;
             break;
@@ -670,8 +662,8 @@ void Mesh::setStepSize(Face& f) {
         Vertex v2 = vertices.at(f.v_ids.at((j+1)%f.v_ids.size()));
         vector<double> diff = getDirectionVector(v1, v2);
         double length = getVectorLength(diff);
-        if (length > 0 && stepSize > length * 0.5) {
-            stepSize = length * 0.5;
+        if (length > 0 && stepSize > length * 1) {
+            stepSize = length * 1;
         }
     }
 }
