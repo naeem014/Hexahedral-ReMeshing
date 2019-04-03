@@ -21,6 +21,7 @@ class Vertex {
         vector<int> neighbors;
         vector<int> cells_ids;
         vector<int> edge_ids;
+        vector<int> corner_neighbors;
         bool isSurfaceVertex = false;
         bool isBoundaryVertex = false;
         bool isCornerVertex = false;
@@ -39,6 +40,7 @@ class Edge {
         int v1, v2;
         int id;
         bool isBoundaryEdge = false;
+        bool isCornerEdge = false;
         bool isVisited = false;
         vector<int> neighbors;
         string type;
@@ -97,6 +99,8 @@ class Mesh {
         void computeNormal(int v_id0, int v_id1, int v_id2);
         vector<Face> extractFaces();
         vector<vector<Face>> extractPatches();
+        vector<Edge> setNeighboringCorners();
+        vector<Edge> setCornerNeighbors(vector<Face> patch);
         vector<Edge> extractFacesFromPatch(vector<Face> patch);
         vector<double> getPlaneNormal(Face& f);
         bool isPlaneSame(Face& f, vector<double> plane_normal);
@@ -113,9 +117,9 @@ class Mesh {
         vector<double> normalizeVector(vector<double> v);
         vector<double> getBarycentricCoordinates(Vertex p, Face f);
         vector<double> getBarycentricCoordinates(Vertex p, int cell_id);
-        vector<Edge> getBoundaryEdges();
+        vector<Edge> getBoundaryEdges(int k);
         int getCornerIndex(Face& f);
-        vector<double> getTraceDirection(Face& f);
+        vector<double> getTraceDirection(Face& f, Edge e, int cell_id);
         vector<Edge> traceLineFromCorner(Vertex& corner, int c_id, vector<double> direction);
         vector<double> rotateVector(vector<double> v, double angle, int axis);
 };

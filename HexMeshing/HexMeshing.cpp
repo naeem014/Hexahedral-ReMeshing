@@ -74,7 +74,14 @@ int main (int argc, char *argv[]) {
 			}			
 		}
 		mesh.setTypes();
-		
+		// vector<Edge> c = mesh.setNeighboringCorners();
+		vector<vector<Face>> patches = mesh.extractPatches();
+		vector<Edge> c = mesh.extractFacesFromPatch(patches[13]);
+		// cout << cvs.size() << endl;
+		// vector<Edge> c;
+		// for (int i = 0; i < cvs.size(); i+=2) {
+		// 	c.emplace_back(cvs.at(i), cvs.at(i+1), c.size());
+		// }
 		// vector<vector<Face>> patches = mesh.extractPatches();
 		// vector<Face> c = patches[0];
 		// vector<Edge> c;
@@ -83,41 +90,44 @@ int main (int argc, char *argv[]) {
 			// cout << i << endl;
 			// c.insert(c.begin(), edges.begin(), edges.end());
 		// }
-		vector<Edge> c = mesh.getBoundaryEdges();
-		cout << c.size() << endl;
+		// for (int j = 0; j < mesh.corner_cells.size(); j++) {
+			// vector<Edge> c = mesh.getBoundaryEdges(0);
+			cout << c.size() << endl;
 
-		ofstream outputFile;
-		outputFile.open("output.vtk");
-		outputFile << "# vtk DataFile Version 1.0" << endl;
-		outputFile << "Unstructured Grid Example" << endl;
-		outputFile << "ASCII" << endl;
-		outputFile << "\nDATASET UNSTRUCTURED_GRID" << endl;
-		outputFile << "POINTS " << mesh.vertices.size() << " float" << endl;
-		for (int i = 0; i < mesh.vertices.size(); i++) {
-			outputFile << mesh.vertices.at(i).x << " " << mesh.vertices.at(i).y << " " << mesh.vertices.at(i).z << endl;
-		}
-		
-		int ncells = c.size();
-		// int num_points = 0;
-		// for (int i = 0; i < ncells; i++) {
-		// 	num_points += (1 + c.at(i).v_ids.size());
-		// }
-		outputFile << "CELLS " << ncells << " " << ncells * 3 << endl;
-		for (int i = 0; i < ncells; i++) {
-			// outputFile << c.at(i).v_ids.size() << " ";
-			// for (int j = 0; j < c.at(i).v_ids.size(); j++) {
-			// 	outputFile << c.at(i).v_ids.at(j) << " ";
+			ofstream outputFile;
+			// outputFile.open("output" + to_string(j) + ".vtk");
+			outputFile.open("output.vtk");
+			outputFile << "# vtk DataFile Version 1.0" << endl;
+			outputFile << "Unstructured Grid Example" << endl;
+			outputFile << "ASCII" << endl;
+			outputFile << "\nDATASET UNSTRUCTURED_GRID" << endl;
+			outputFile << "POINTS " << mesh.vertices.size() << " float" << endl;
+			for (int i = 0; i < mesh.vertices.size(); i++) {
+				outputFile << mesh.vertices.at(i).x << " " << mesh.vertices.at(i).y << " " << mesh.vertices.at(i).z << endl;
+			}
+			
+			int ncells = c.size();
+			// int num_points = 0;
+			// for (int i = 0; i < ncells; i++) {
+			// 	num_points += (1 + c.at(i).v_ids.size());
 			// }
-			// outputFile << endl;
-			// // outputFile << "1 " << c.at(0).v_ids.at(i) << endl;
-			outputFile << "2 " << c.at(i).v1 << " " << c.at(i).v2 << endl;
-		}
+			outputFile << "CELLS " << ncells << " " << ncells * 3 << endl;
+			for (int i = 0; i < ncells; i++) {
+				// outputFile << c.at(i).v_ids.size() << " ";
+				// for (int j = 0; j < c.at(i).v_ids.size(); j++) {
+				// 	outputFile << c.at(i).v_ids.at(j) << " ";
+				// }
+				// outputFile << endl;
+				// // outputFile << "1 " << c.at(0).v_ids.at(i) << endl;
+				outputFile << "2 " << c.at(i).v1 << " " << c.at(i).v2 << endl;
+			}
 
 
-		outputFile << "CELL_TYPES " << ncells << endl;
-		for (int i = 0; i < ncells; i++) {
-			outputFile << "3" << endl;
-		}
+			outputFile << "CELL_TYPES " << ncells << endl;
+			for (int i = 0; i < ncells; i++) {
+				outputFile << "3" << endl;
+			}
+		// }
 	}
   	return EXIT_SUCCESS;
 }
