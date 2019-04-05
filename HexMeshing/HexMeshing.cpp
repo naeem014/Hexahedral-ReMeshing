@@ -74,13 +74,17 @@ int main (int argc, char *argv[]) {
 			}			
 		}
 		mesh.setTypes();
-		// vector<Edge> c = mesh.setNeighboringCorners();
-		vector<vector<Face>> patches = mesh.extractPatches();
-		vector<Edge> c = mesh.extractFacesFromPatch(patches[13]);
+		mesh.setNeighboringCorners();
+		// vector<vector<Face>> patches = mesh.extractPatches();
+		// vector<Edge> c = mesh.extractFacesFromPatch(patches[8]);
 		// cout << cvs.size() << endl;
 		// vector<Edge> c;
-		// for (int i = 0; i < cvs.size(); i+=2) {
-		// 	c.emplace_back(cvs.at(i), cvs.at(i+1), c.size());
+		// for (int i = 0; i < mesh.corner_vertices.size(); i++) {
+		// 	Vertex& v = mesh.vertices.at(mesh.corner_vertices.at(i));
+		// 	cout << v.neighboring_corners.size() << endl;
+		// 	for (int j = 0; j < v.neighboring_corners.size(); j++) {
+		// 		c.emplace_back(v.id, mesh.vertices.at(v.neighboring_corners.at(j)).id, c.size());
+		// 	}
 		// }
 		// vector<vector<Face>> patches = mesh.extractPatches();
 		// vector<Face> c = patches[0];
@@ -91,7 +95,8 @@ int main (int argc, char *argv[]) {
 			// c.insert(c.begin(), edges.begin(), edges.end());
 		// }
 		// for (int j = 0; j < mesh.corner_cells.size(); j++) {
-			// vector<Edge> c = mesh.getBoundaryEdges(0);
+			vector<Edge> c = mesh.getBoundaryEdges();
+			cout << "Did I actually arrive here?" << endl;
 			cout << c.size() << endl;
 
 			ofstream outputFile;
