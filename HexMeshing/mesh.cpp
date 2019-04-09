@@ -3,7 +3,6 @@
 #include<algorithm>
 #include<limits>
 #include "glm/glm.hpp"
-#include "glm/gtx/rotate_vector.hpp"
 
 #include "Mesh.h"
 
@@ -153,13 +152,6 @@ vector<double> Mesh::getPlaneNormal(Face& f) {
     double a[] = {v1.x - v0.x, v1.y - v0.y, v1.z - v0.z};
     double b[] = {v2.x - v0.x, v2.y - v0.y, v2.z - v0.z};
 
-    // vector<double> a = getDirectionVector(v0, v1);
-    // vector<double> b = getDirectionVector(v0, v2);
-
-    // vector<double> normal = normalizeVector(getCrossProduct(a, b));
-    // normal[0] = fabs(normal[0]);
-    // normal[1] = fabs(normal[1]);
-    // normal[2] = fabs(normal[2]);
     double normal_x = (a[1] * b[2]) - (a[2] * b[1]);
     double normal_y = (a[2] * b[0]) - (a[0] * b[2]);
     double normal_z = (a[0] * b[1]) - (a[1] * b[0]);
@@ -172,172 +164,167 @@ vector<double> Mesh::getPlaneNormal(Face& f) {
 
 vector<Edge> Mesh::getBoundaryEdges() {
     vector<Edge> boundary_edges;
-    /*for (int i = 0; i < corner_vertices.size(); i++) {
+    for (int i = 5; i < corner_vertices.size(); i++) {
+        // cout << i << endl;
         Vertex& c1 = vertices.at(corner_vertices.at(i));
         for (int j = 0; j < c1.neighboring_corners.size(); j++) {
             Vertex& c2 = vertices.at(c1.neighboring_corners.at(j));
             glm::vec3 V0 = glm::vec3(c1.x, c1.y, c1.z);
             glm::vec3 V1 = glm::vec3(c2.x, c2.y, c2.z);
-            glm::vec3 d = glm::normalize(V1 - V0);
-            vector<double> direction = {d[0], d[1], d[2]};
-            for (int k = 0; k < corner_cells.size(); k++) {
-                Cell& c = corner_cells.at(k);
-                if (c.isCornerCell && count(c.v_ids.begin(), c.v_ids.end(), c1.id)) {
-                    vector<Edge> edges = traceLineFromCorner(c1.id, c.id, direction);
-            //         boundary_edges.insert(boundary_edges.begin(), edges.begin(), edges.end());
+            // glm::vec3 d = glm::normalize(V1 - V0);
+            // vector<double> direction = {d[0], d[1], d[2]};
+            // vector<double> crd1 = getMaskCoords(c1);
+            // vector<double> crd2 = getMaskCoords(c2);
+            // glm::vec3 V0 = glm::vec3(c1.mask_coords[0], c1.mask_coords[1], c1.mask_coords[2]);
+            // glm::vec3 V1 = glm::vec3(c2.mask_coords[0], c2.mask_coords[1], c2.mask_coords[2]);
+            // glm::vec3 V0 = glm::vec3(crd1[0], crd1[1], crd1[2]);
+            // glm::vec3 V1 = glm::vec3(crd2[0], crd2[1], crd2[2]);
+            
+            glm::vec3 d1 = V1 - V0;
+            // glm::vec3 d2 = V0 - V1;
+            vector<double> direction1 = {d1[0], d1[1], d1[2]};
+            // vector<double> direction2 = {d2[0], d2[1], d2[2]};
+            // cout << c2.cells_ids.size() << endl;
+            for (int k = 0; k < c1.cells_ids.size(); k++) {
+                if (!cells.at(c1.cells_ids.at(k)).isCornerCell) {
+                    continue;
                 }
+                vector<Edge> edges = traceLineFromCorner(c1.id, cells.at(c1.cells_ids.at(k)).id, direction1);
+                boundary_edges.insert(boundary_edges.begin(), edges.begin(), edges.end());
             }
-        }
-    }*/
-    for (int i = 3; i < corner_cells.size(); i++) {
-        // Cell& c = corner_cells.at(3);
-        Cell& c = corner_cells.at(i);
-        for (int j = 0; j < c.v_ids.size(); j++) {
-            if (!vertices.at(c.v_ids.at(j)).isCornerVertex) {
-                continue;
-            }
-            // if (c.faces.at(j).isCornerFace) {
-                vector<Edge> edges;
-                // Face& f = c.faces.at(j);
-                // int corner_index = getCornerIndex(f);
-                Vertex& corner_v = vertices.at(c.v_ids[j]);
-                // cout << "Before neighboring corners" << endl;
-                // cout << corner_v.neighboring_corners.size() << endl;
-                for (int k = 0; k < corner_v.neighboring_corners.size(); k++) {
-                    // cout << "Inside neighboring corners loop: " << k << endl;
-                    Vertex& corner_v2 = vertices.at(corner_v.neighboring_corners.at(k));
-                    glm::vec3 V0 = glm::vec3(corner_v.x, corner_v.y, corner_v.z);
-                    glm::vec3 V1 = glm::vec3(corner_v2.x, corner_v2.y, corner_v2.z);
-                    // cout << V0[0] << " " << V0[1] << " " << V0[2] << endl;
-                    // cout << V1[0] << " " << V1[1] << " " << V1[2] << endl;
-                    // glm::vec3 d = V1 - V0;
-                    glm::vec3 d = V1 - V0;
-                    // glm::vec3 d = glm::normalize(V1 - V0);
-                    vector<double> d1 = getDirectionVector(corner_v, corner_v2);
-                    vector<double> direction1 = {d[0], d[1], d[2]};
-
-                    // print_vector("direction1", direction1);
-                    // cout << "Before tracing" << endl;
-                    edges = traceLineFromCorner(corner_v.id, c.id, direction1);
-                    // cout << "Corner: " << i << " vertex: " << j << " number of neighbors: " << corner_v.neighboring_corners.size() <<  " neighbor: " << k << endl;
-                    boundary_edges.insert(boundary_edges.begin(), edges.begin(), edges.end());
-                    // cout << "After concatenating edges" << endl;
-                    break;
-                }
-                // cout << "Neighboring corners loop finished" << endl;
-                // Vertex v0 = vertices.at(f.v_ids[corner_index]);
-                // Vertex v1 = vertices.at(f.v_ids[(corner_index + 1) % f.v_ids.size()]);
-                // Vertex v2 = vertices.at(f.v_ids[(corner_index + 2) % f.v_ids.size()]);
-                // vector<double> a = getDirectionVector(v0, v1);
-                // vector<double> b = getDirectionVector(v0, v2);
-                // glm::vec3 V0 = glm::vec3(v0.x, v0.y, v0.z);
-                // glm::vec3 V1 = glm::vec3(v1.x, v1.y, v1.z);
-                // glm::vec3 V2 = glm::vec3(v2.x, v2.y, v2.z);
-                // glm::vec3 a = V1 - V0;
-                // glm::vec3 b = V2 - V0;
-                // glm::vec3 calc = glm::normalize(glm::cross(a, b));
-                // vector<double> direction1 = {calc[0], calc[1], calc[2]};
-                // vector<double> direction = normalizeVector(getCrossProduct(a, b));
-                // Edge e1(v0.id, v1.id, -1);
-                // Edge e2(v0.id, v2.id, -1);
-                // vector<double> direction1 = getTraceDirection(f, e1, c.id);
-                // vector<double> direction2 = getTraceDirection(f, e2, c.id);
-                // if (!direction1.empty()) {
-                //     edges = traceLineFromCorner(v0, c.id, direction1);
-                //     boundary_edges.insert(boundary_edges.begin(), edges.begin(), edges.end());
-                    // vector<double> directionN1 = {-direction1[0], -direction1[1], -direction1[2]};
-                    // edges = traceLineFromCorner(v0, c.id, directionN1);
-                    // boundary_edges.insert(boundary_edges.begin(), edges.begin(), edges.end());
-                // }
-                // if (!direction2.empty()) {
-                //     edges = traceLineFromCorner(v0, c.id, direction2);
-                //     boundary_edges.insert(boundary_edges.begin(), edges.begin(), edges.end());
-                //     vector<double> directionN2 = {-direction2[0], -direction2[1], -direction2[2]};
-                //     edges = traceLineFromCorner(v0, c.id, directionN2);
-                //     boundary_edges.insert(boundary_edges.begin(), edges.begin(), edges.end());
-                // }
-                // vector<double> direction = getPlaneNormal(c.faces.at(j));
+            // cout << "/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/" << endl;
+            // cout << c2.cells_ids.size() << endl;
+            // for (int k = 0; k < c2.cells_ids.size(); k++) {
+            //     cout << "Tracing corner 2" << endl;
+            //     if (!cells.at(c2.cells_ids.at(k)).isCornerCell) {
+            //         continue;
+            //     }
+            //     cout << "start Tracing corner 2" << endl;
+            //     vector<Edge> edges = traceLineFromCorner(c2.id, cells.at(c2.cells_ids.at(k)).id, direction2);
+            //     boundary_edges.insert(boundary_edges.begin(), edges.begin(), edges.end());
             // }
-            break; //remove
+            // break;
         }
-        break; // remove
+        break;
     }
     return boundary_edges;
 }
 
-vector<double> Mesh::getTraceDirection(Face& f, Edge e, int cell_id) {
-    vector<double> direction;
-    glm::vec3 d(vertices.at(e.v2).x - vertices.at(e.v1).x, vertices.at(e.v2).y - vertices.at(e.v1).y, vertices.at(e.v2).z - vertices.at(e.v1).z);
-    Cell& c = cells.at(cell_id);
-    bool foundFace = false;
-    for (int i = 0; i < c.neighbors.size(); i++) {
-        if (cells.at(c.neighbors.at(i)).isSurfaceCell) {
-            Cell& neighbor_cell = cells.at(c.neighbors.at(i));
-            for (int j = 0; j < neighbor_cell.faces.size(); j++) {
-                Face& n_f = neighbor_cell.faces.at(j);
-                if (n_f.isSurfaceFace && count(n_f.v_ids.begin(), n_f.v_ids.end(), e.v1) && count(n_f.v_ids.begin(), n_f.v_ids.end(), e.v2)) {
-                    glm::vec3 a1(vertices.at(f.v_ids[0]).x - vertices.at(f.v_ids[1]).x, vertices.at(f.v_ids[0]).y - vertices.at(f.v_ids[1]).y, vertices.at(f.v_ids[0]).z - vertices.at(f.v_ids[1]).z);
-                    glm::vec3 b1(vertices.at(f.v_ids[0]).x - vertices.at(f.v_ids[2]).x, vertices.at(f.v_ids[0]).y - vertices.at(f.v_ids[2]).y, vertices.at(f.v_ids[0]).z - vertices.at(f.v_ids[2]).z);
-                    glm::vec3 a2(vertices.at(n_f.v_ids[0]).x - vertices.at(n_f.v_ids[1]).x, vertices.at(n_f.v_ids[0]).y - vertices.at(n_f.v_ids[1]).y, vertices.at(n_f.v_ids[0]).z - vertices.at(n_f.v_ids[1]).z);
-                    glm::vec3 b2(vertices.at(n_f.v_ids[0]).x - vertices.at(n_f.v_ids[2]).x, vertices.at(n_f.v_ids[0]).y - vertices.at(n_f.v_ids[2]).y, vertices.at(n_f.v_ids[0]).z - vertices.at(n_f.v_ids[2]).z);
-                    glm::vec3 c1 = glm::normalize(glm::cross(a1, b1));
-                    glm::vec3 c2 = glm::normalize(glm::cross(a2, b2));
-                    double dotP = abs(glm::dot(c1, c2) / (glm::length(c1) * glm::length(c2)));
-                    if (dotP < 0.5) {
-                        d = glm::normalize(d);
-                        direction = {d[0], d[1], d[2]};
-                        break;
-                    }
-                }
-            }
-            if (foundFace) {
-                break;
-            }
+vector<vector<double>> Mesh::getMaskCoords(Vertex& v) {
+    vector<vector<double>> points;
+    points.push_back({v.x + (stepSize / 2), v.y + (stepSize / 2), v.z + (stepSize / 2)}); 
+    points.push_back({v.x + (stepSize / 2), v.y + (stepSize / 2), v.z - (stepSize / 2)}); 
+    points.push_back({v.x + (stepSize / 2), v.y - (stepSize / 2), v.z + (stepSize / 2)}); 
+    points.push_back({v.x + (stepSize / 2), v.y - (stepSize / 2), v.z - (stepSize / 2)}); 
+    points.push_back({v.x - (stepSize / 2), v.y + (stepSize / 2), v.z + (stepSize / 2)}); 
+    points.push_back({v.x - (stepSize / 2), v.y + (stepSize / 2), v.z - (stepSize / 2)}); 
+    points.push_back({v.x - (stepSize / 2), v.y - (stepSize / 2), v.z + (stepSize / 2)});
+    points.push_back({v.x - (stepSize / 2), v.y - (stepSize / 2), v.z - (stepSize / 2)});
+    // points.push_back({v.x + (stepSize / 2), v.y, v.z}); 
+    // points.push_back({v.x - (stepSize / 2), v.y, v.z}); 
+    // points.push_back({v.x, v.y + (stepSize / 2), v.z}); 
+    // points.push_back({v.x, v.y - (stepSize / 2), v.z}); 
+    // points.push_back({v.x, v.y, v.z + (stepSize / 2)}); 
+    // points.push_back({v.x, v.y, v.z - (stepSize / 2)}); 
+    vector<vector<double>> new_points;
+    int index = 0;
+    for (int i = 0; i < points.size(); i++) {
+        if (isPointInsideVolume(points.at(i))) {
+            // index = i;
+            // break;
+            new_points.push_back(points.at(i));
         }
     }
-    return direction;
-    
-    // int corner_index = getCornerIndex(f);
-    
-    // Vertex v0 = vertices.at(f.v_ids[corner_index]);
-    // Vertex v1 = vertices.at(f.v_ids[(corner_index + 1) % f.v_ids.size()]);
-    // Vertex v2 = vertices.at(f.v_ids[(corner_index + 2) % f.v_ids.size()]);
-    // cout << "v0: " << v0.x << " " << v0.y << " " << v0.z << endl;
-    // cout << "v1: " << v1.x << " " << v1.y << " " << v1.z << endl;
-    // cout << "v2: " << v2.x << " " << v2.y << " " << v2.z << endl;
-    // glm::vec3 a = glm::vec3(v1.x, v1.y, v1.z) - glm::vec3(v0.x, v0.y, v0.z);
-    // glm::vec3 b = glm::vec3(v2.x, v2.y, v2.z) - glm::vec3(v0.x, v0.y, v0.z);
-    // glm::vec3 normal = glm::cross(a, b);
-    // vector<double> a = normalizeVector(getDirectionVector(v0, v1));
-    // vector<double> b = normalizeVector(getDirectionVector(v0, v2));
-    // vector<double> face_normal = {normal[0], normal[1], normal[2]};
-    // print_vector("a", a);
-    // print_vector("b", b);
-    // for (int i = 0; i < 3; i++) {
-    //     vector<double> n_ = rotateVector(face_normal, 90, i);
-    //     glm::vec3 n = glm::vec3(n_[0], n_[1], n_[2]);
-    //     // print_vector("n",n);
-    //     // double dotA = fabs((getDotProduct(n, a)) / ((getVectorLength(n)) * (getVectorLength(a))));
-    //     // double dotB = fabs((getDotProduct(n, b)) / ((getVectorLength(n)) * (getVectorLength(b))));
-    //     double dotA = glm::dot(n, a) / (glm::length(n) * glm::length(a));
-    //     double dotB = glm::dot(n, b) / (glm::length(n) * glm::length(b));
-    //     cout << "dotA: " << dotA << endl;
-    //     cout << "dotB: " << dotB << endl;
-        
-    //     cout << "==============================" << endl;
-    //     if (dotA == 1 || dotA == -1) {
-    //         // direction = normalizeVector(a);
-    //         a = glm::normalize(a);
-    //         direction = {a[0], a[1], a[2]};
-    //         break;
-    //     } else if (dotB == 1 || dotB == -1) {
-    //         // direction = normalizeVector(b);
-    //         b = glm::normalize(b);
-    //         direction = {b[0], b[1], b[2]};
-    //         break;
-    //     }
-    // }
-    // return direction;
+    // return points.at(index);
+    return new_points;
+}
+
+bool Mesh::isPointInsideVolume(vector<double> p) {
+    vector<glm::vec3> directions = {
+        glm::vec3(1, 0, 0),
+        glm::vec3(-1, 0, 0),
+        glm::vec3(0, 1, 0),
+        glm::vec3(0, -1, 0),
+        glm::vec3(0, 0, 1),
+        glm::vec3(0, 0, -1)
+    };
+    for (int i = 0; i < directions.size(); i++) {
+        int count = 0;
+        glm::vec3 d = glm::vec3(directions.at(i)[0], directions.at(i)[1], directions.at(i)[2]);
+        cout << "Direction at " << i << ": " << d[0] << " " << d[1] << " " << d[2] << endl;
+        for (int j = 0; j < mesh_faces.size(); j++) {
+            // cout << "Face at " << j << endl; 
+            bool doesLineIntersectPlane = false;
+            Face& plane = mesh_faces.at(j);
+            Vertex& p1 = vertices.at(plane.v_ids.at(1));
+            Vertex& p2 = vertices.at(plane.v_ids.at(2));
+            Vertex& p3 = vertices.at(plane.v_ids.at(0));
+            glm::vec3 normal = glm::cross(glm::vec3(p2.x - p1.x, p2.y - p1.y, p2.z - p1.z), glm::vec3(p3.x - p1.x, p3.y - p1.y, p3.z - p1.z));
+            glm::vec3 PN = glm::vec3(p[0] - p1.x, p[1] - p1.y, p[2] - p1.z);
+            normal = glm::normalize(normal);
+            double dotPN = glm::dot(normal, PN);
+            // cout << "PN: " << PN[0] << " " << PN[1] << " " << PN[2] << endl;
+            // cout << "normal: " << n[0] << " " << n[1] << " " << n[2] << endl;
+            // cout << "Plane P dot: " << dotPN << endl;
+            if (dotPN == 0) {
+                doesLineIntersectPlane = isPointOnPlane(p, plane, normal, directions);
+            } else {
+                double A = normal[0];
+                double B = normal[1];
+                double C = normal[2];
+                double D = - (A * p1.x) - (B * p1.y) - (C * p1.z);
+                double t = - ((A * p[0]) + (B * p[1]) + (C * p[2]) + D) / ((A * d[0]) + (B * d[1]) + (C * d[2]));
+                vector<double> new_p = {p[0] + (t * d[0]), p[1] + (t * d[1]), p[2] + (t * d[2])};
+                doesLineIntersectPlane = isPointOnPlane(new_p, plane, normal, directions);
+            }
+            if (doesLineIntersectPlane) {
+                count += 1;
+            }
+        }
+        if (count % 2 == 0) {
+            return false;
+        }
+        // cout << "==============================================================================" << endl;
+    }
+    return true;
+}
+
+bool Mesh::isPointOnPlane(vector<double> p, Face& plane, glm::vec3 normal, vector<glm::vec3> directions) {
+    for (int i = 0; i < directions.size(); i++) {
+        int count = 0;
+        if (abs(glm::dot(directions.at(i), glm::normalize(normal))) == 1) {
+            continue;
+        }
+        for (int j = 0; j < plane.v_ids.size(); j++) {
+            Vertex& a = vertices.at(plane.v_ids.at(j));
+            Vertex& b = vertices.at(plane.v_ids.at((j + 1) % plane.v_ids.size()));
+            glm::vec3 p1 = glm::vec3(a.x, a.y, a.z);
+            glm::vec3 v1 = glm::vec3(b.x - a.x, b.y - a.y, b.z - a.z);
+            glm::vec3 p2 = glm::vec3(p[0], p[1], p[2]);
+            glm::vec3 v2 = directions.at(i);
+            glm::vec3 p3 = glm::vec3(b.x, b.y, b.z);
+
+            glm::vec3 p2_p1 = p2 - p1;
+            glm::vec3 v1Xv2 = glm::cross(v1, v2);
+            glm::vec3 p2_p1Xv2 = glm::cross(p2_p1, v2);
+            
+            double A = glm::length(p2_p1Xv2) / glm::length(v1Xv2);
+            // cout << glm::dot(p2_p1Xv2, v1Xv2) << endl;
+            if (glm::dot(p2_p1Xv2, v1Xv2) < 0) {
+                A = -A;
+                continue;
+            }
+            glm::vec3 intersection = p1 + glm::vec3(A * v1[0], A * v1[1], A * v1[2]);
+            if ((glm::length(p1 - intersection) / glm::length(v1)) <= 1 && (glm::length(p3 - intersection) / glm::length(v1)) <= 1) {
+                count += 1;
+            }
+        }
+        // cout << count << endl;
+        if (count % 2 == 0) {
+            return false;
+        }
+    }
+    return true;
 }
 
 int Mesh::getCornerIndex(Face& f) {
@@ -354,19 +341,13 @@ vector<Edge> Mesh::traceLineFromCorner(int corner_id, int c_id, vector<double> d
     vector<Edge> boundary_edges;
     Cell& c = cells.at(c_id);
     Vertex& corner = vertices.at(corner_id);
-    // Vertex initial = corner;
-    stepSize = 0.001;
-    glm::vec3 initial(corner.x, corner.y, corner.z);
-    glm::vec3 d(stepSize * direction[0], stepSize * direction[1], stepSize * direction[2]);
-    cout << d[0] << " " << d[1] << " " << d[2] << endl;
-    // bool foundCell = false;
+    double step = 1;
+    // step = stepSize;
+    glm::vec3 initial(corner.mask_coords[0], corner.mask_coords[1], corner.mask_coords[2]);
+    glm::vec3 d(step * direction[0], step * direction[1], step * direction[2]);
+    // cout << d[0] << " " << d[1] << " " << d[2] << endl;
     while (true) {
-        // cout << "Start of while loop" << endl;
         int id = vertices.size();
-        // cout << "step size: " << stepSize << endl;
-        // print_vector("direction: ", direction);
-        // cout << "initial: " << initial.x << " " << initial.y << " " << initial.z << endl;
-        // glm::vec3 new_end = glm::vec3(initial.x + (stepSize * direction[0]), initial.y + (stepSize * direction[1]), initial.z + (stepSize * direction[2]));
         Vertex start(initial[0], initial[1], initial[2], id);
         vertices.push_back(start);
         id = vertices.size();
@@ -374,49 +355,27 @@ vector<Edge> Mesh::traceLineFromCorner(int corner_id, int c_id, vector<double> d
         Vertex end(new_end[0], new_end[1], new_end[2], id);
         vertices.push_back(end);
         boundary_edges.emplace_back(start.id, end.id, boundary_edges.size());
-        // if (foundCell) {
-        //     stepSize = stepSize / 2;
-        //     foundCell = false;
-        // }
-        // vertices.push_back(end);
-        // boundary_edges.emplace_back(initial.id, end.id, boundary_edges.size());
         vector<double> b_coords = getBarycentricCoordinates(end, c_id);
         // cout << "C_ID: " << c_id << endl;
-        cout << "a: " << b_coords[0] << " b: " << b_coords[1] << " c: " << b_coords[2] << endl;// << " d: " << b_coords[3] << endl;
-        cout << b_coords[0] + b_coords[1] + b_coords[2] << endl;
-        cout << c_id << endl;
-        cout << "======================================================================================" << endl;
+        // cout << "a: " << b_coords[0] << " b: " << b_coords[1] << " c: " << b_coords[2] << endl;// << " d: " << b_coords[3] << endl;
+        // cout << b_coords[0] + b_coords[1] + b_coords[2] << endl;
+        // cout << c_id << endl;
+        // cout << "======================================================================================" << endl;
         if (b_coords[0] >= 0 && b_coords[0] <= 1 && b_coords[1] >= 0 && b_coords[1] <= 1 && b_coords[2] >= 0 && b_coords[2] <= 1) {// && b_coords[3] >= 0) {
             initial = new_end;
             continue;
         } else {
-            // cout << "Entered neighbour condition" << endl;
             bool foundCell = false;
-            // stepSize = stepSize * 2;
             for (int i = 0; i < c.v_ids.size(); i++) {
-                // cout << "First for loop" << endl;
                 Vertex& c_v = vertices.at(c.v_ids.at(i));
                 for (int j = 0; j < c_v.cells_ids.size(); j++) {
                     if (c_v.cells_ids.at(j) == c_id) {
-                        
-                        // cout << "Continued " << j << " " << c_v.cells_ids.at(j) << endl;
                         continue;
                     }
-                    // cout << "After if" << endl;
-                    // int id_ = vertices.size();
-                    // // cout << "id: " << id_ << endl;
-                    // Vertex end_(initial.x + (2 * stepSize * direction[0]), initial.y + (2 * stepSize * direction[1]), initial.z + (2 * stepSize * direction[2]), -1);
-                    // cout << "pushed edge" << endl;
-                    // cout << end_.x << " " << end_.y << " " << end_.z << " " << end_.id  << endl;
-                    // cout << j << " " << c_v.cells_ids.at(j) << endl;
                     b_coords = getBarycentricCoordinates(end, c_v.cells_ids.at(j));
-                    // cout << "Got barycentric coordinates" << endl;
                     if (b_coords[0] >= 0 && b_coords[0] <= 1 && b_coords[1] >= 0 && b_coords[1] <= 1 && b_coords[2] >= 0 && b_coords[2] <= 1) {// && b_coords[3] >= 0) {
                         // cout << "a: " << b_coords[0] << " b: " << b_coords[1] << " c: " << b_coords[2] << endl;// << " d: " << b_coords[3] << endl;
                         // cout << "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||" << endl;
-                        // vertices.push_back(end_);
-                        // boundary_edges.emplace_back(initial.id, end_.id, boundary_edges.size());    
-                        // stepSize = stepSize / 2;
                         initial = new_end;
                         c_id = c_v.cells_ids.at(j);
                         c = cells.at(c_id);
@@ -438,70 +397,8 @@ vector<Edge> Mesh::traceLineFromCorner(int corner_id, int c_id, vector<double> d
 }
 
 vector<double> Mesh::getBarycentricCoordinates(Vertex p, int cell_id) {
-    // cout << "Inside bary func" << endl;
     Cell& cell = cells.at(cell_id);
-    /*Vertex a = vertices.at(cell.v_ids[0]);
-    Vertex b = vertices.at(cell.v_ids[1]);
-    Vertex c = vertices.at(cell.v_ids[2]);
-    Vertex d = vertices.at(cell.v_ids[3]);
-    glm::vec3 ab = glm::vec3(b.x, b.y, b.z) - glm::vec3(a.x, a.y, a.z);
-    glm::vec3 ac = glm::vec3(c.x, c.y, c.z) - glm::vec3(a.x, a.y, a.z);
-    glm::vec3 ad = glm::vec3(d.x, d.y, d.z) - glm::vec3(a.x, a.y, a.z);
-    glm::vec3 ap = glm::vec3(p.x, p.y, p.z) - glm::vec3(a.x, a.y, a.z);
-    glm::vec3 bp = glm::vec3(p.x, p.y, p.z) - glm::vec3(b.x, b.y, b.z);
-    glm::vec3 bd = glm::vec3(d.x, d.y, d.z) - glm::vec3(b.x, b.y, b.z);
-    glm::vec3 bc = glm::vec3(c.x, c.y, c.z) - glm::vec3(b.x, b.y, b.z);
-    // vector<double> ab = getDirectionVector(a, b);
-    // vector<double> ac = getDirectionVector(a, c);
-    // vector<double> ad = getDirectionVector(a, d);
-    // vector<double> ap = getDirectionVector(a, p);
-    // vector<double> bp = getDirectionVector(b, p);
-    // vector<double> bd = getDirectionVector(b, d);
-    // vector<double> bc = getDirectionVector(b, c);
-
-    // cout << "a: " << a.x << " " << a.y << " " << a.z << endl;
-    // cout << "b: " << b.x << " " << b.y << " " << b.z << endl;
-    // cout << "c: " << c.x << " " << c.y << " " << c.z << endl;
-    // cout << "d: " << d.x << " " << d.y << " " << d.z << endl;
-    // cout << "p: " << p.x << " " << p.y << " " << p.z << endl;
-
-    // cout << "----------------------------------------------------------------------" << endl;
-
-    // print_vector("ab", ab);
-    // print_vector("ac", ac);
-    // print_vector("ad", ad);
-    // print_vector("ap", ap);
-    // print_vector("bp", bp);
-    // print_vector("bd", bd);
-    // print_vector("bc", bc);
-
-    // // cout << "----------------------------------------------------------------------" << endl;
-
-    // print_vector("bdXbc", getCrossProduct(bd, bc));
-    // print_vector("acXad", getCrossProduct(ac, ad));
-    // print_vector("adXab", getCrossProduct(ad, ab));
-    // print_vector("abXac", getCrossProduct(ab, ac));
-
-    // cout << "V: " << getDotProduct(ad, getCrossProduct(ab, ac));
-
-    // cout << "----------------------------------------------------------------------" << endl;
-
-    // double V = 1 / fabs(getDotProduct(ad, getCrossProduct(ab, ac)));
-    double V = 1 / glm::dot(ab, glm::cross(ac, ad));
-    // vector<double> b_coords = { getDotProduct(bp, getCrossProduct(bd, bc)) * V, 
-    //                             getDotProduct(ap, getCrossProduct(ac, ad)) * V,
-    //                             getDotProduct(ap, getCrossProduct(ad, ab)) * V,
-    //                             getDotProduct(ap, getCrossProduct(ab, ac)) * V };
-    double b1 = glm::dot(bp, glm::cross(bd, bc)) * V;
-    double b2 = glm::dot(ap, glm::cross(ac, ad)) * V;
-    double b3 = glm::dot(ap, glm::cross(ad, ab)) * V;
-    double b4 = glm::dot(ap, glm::cross(ab, ac)) * V;
-    // b1 = b1 > -0.00001 && b1 < 0.00001 ? 0 : b1;
-    // b2 = b2 > -0.00001 && b2 < 0.00001 ? 0 : b2;
-    // b3 = b3 > -0.00001 && b3 < 0.00001 ? 0 : b3;
-    // b4 = b4 > -0.00001 && b4 < 0.00001? 0 : b4;
-    vector<double> b_coords = { b1, b2, b3, b4};*/
-
+    
     Vertex v1 = vertices.at(cell.v_ids[0]);
     Vertex v2 = vertices.at(cell.v_ids[1]);
     Vertex v3 = vertices.at(cell.v_ids[2]);
@@ -528,120 +425,10 @@ void print_vector(string message, vector<double> v) {
 
 void Mesh::setNeighboringCorners() {
     vector<vector<Face>> patches = extractPatches();
-    // vector<int> c_vertices;
     for (int i = 0; i < patches.size(); i++) {
         setCornerNeighbors(patches[i]);
-        // vector<int> cv = setCornerNeighbors(patches[i]);
-        // c_vertices.insert(c_vertices.begin(), cv.begin(), cv.end());
-        // break;
     }
-    // return c_vertices;
 }
-/*
-void Mesh::setCornerNeighbors(vector<Face> patch) {
-    for (int i = 0; i < patch.size(); i++) {
-        for (int j = i+1; j < patch.size(); j++) {
-            if (containsVertices(patch[i].v_ids, patch[j].v_ids)) {
-                patch[i].neighbors.push_back(j);
-                patch[j].neighbors.push_back(i);
-            }
-        }
-    }
-    vector<Edge> boundary_edges;
-    vector<Edge> queue;
-    vector<int> c_vertices;
-    for (int i = 0; i < patch.size(); i++) {
-        if (!patch[i].isBoundaryFace) {
-            continue;
-        }
-        for (int j = 0; j < patch[i].v_ids.size(); j++) {
-            Edge e(patch[i].v_ids[j], patch[i].v_ids[(j+1)%patch[i].v_ids.size()], boundary_edges.size());
-            if (!edgeInNeighbors(e, patch, i)) {
-                boundary_edges.push_back(e);
-                if (vertices.at(e.v1).isCornerVertex || vertices.at(e.v2).isCornerVertex) {
-                    boundary_edges.back().isCornerEdge = true;
-                    queue.push_back(boundary_edges.back());
-                }
-                break;
-            }
-        }
-    }
-    for (int i = 0; i < boundary_edges.size(); i++) {
-        for (int j = i+1; j < boundary_edges.size(); j++) {
-            if (boundary_edges[i].v1 == boundary_edges[j].v1 || boundary_edges[i].v1 == boundary_edges[j].v2
-                || boundary_edges[i].v2 == boundary_edges[j].v1 || boundary_edges[i].v2 == boundary_edges[j].v2) {
-                boundary_edges[i].neighbors.push_back(j);
-                boundary_edges[j].neighbors.push_back(i);
-            }
-        }
-    }
-    while (!queue.empty()) {
-        if (boundary_edges.at(queue.back().id).isVisited) {
-            queue.pop_back();
-        } else {
-            boundary_edges.at(queue.back().id).isVisited = true;
-            
-            if (boundary_edges.at(queue.back().id).isCornerEdge) {
-                Edge e = boundary_edges.at(queue.back().id);
-                if (vertices.at(e.v1).isCornerVertex) {
-                    c_vertices.push_back(e.v1);
-                } else {
-                    c_vertices.push_back(e.v2);
-                }
-            }
-            for (int i = 0; i < boundary_edges.at(queue.back().id).neighbors.size(); i++) {
-                if (!boundary_edges.at(boundary_edges.at(queue.back().id).neighbors.at(i)).isVisited) {
-                    queue.push_back(boundary_edges.at(boundary_edges.at(queue.back().id).neighbors.at(i)));
-                    break;
-                }
-            }
-        }
-    }
-    // cout << c_vertices.size() << endl;
-    for (int i = 0; i < c_vertices.size(); i++) {
-        vertices.at(c_vertices[i]).neighboring_corners.push_back(vertices.at(c_vertices[(i+1)%c_vertices.size()]).id);
-    }
-    // return c_vertices;
-
-        
-        /*Face& f = patch[i];
-        int corner_index = getCornerIndex(f);
-        int corner_id = f.v_ids.at(corner_index);
-        int v_id = corner_id;
-        int patch_id = i;
-        while (true) {
-            for (int j = 0; j < patch[patch_id].v_ids.size(); j++) {
-                Edge e(patch[patch_id].v_ids[j], patch[patch_id].v_ids[(j+1)%f.v_ids.size()], -1);
-                if (!edgeInNeighbors(e, patch, patch_id)) {
-                    if (v_id != e.v1) {
-                        v_id = e.v1;
-                    } else {
-                        v_id = e.v2;
-                    }
-                    patch[patch_id].isVisited = true;
-                    // cout << "corner id: " << corner_id << " " << "v id: " << v_id << endl;
-                    break;
-                }
-            }
-            if (vertices.at(v_id).isCornerVertex) {
-                Vertex& v = vertices.at(v_id);
-                Vertex& c = vertices.at(corner_id);
-                if (v_id != corner_id && (v.neighbors.empty() || !count(v.neighbors.begin(), v.neighbors.end(), corner_id))) {
-                    c.neighbors.push_back(v_id);
-                }
-                break;
-            }
-            for (int j = 0; j < patch[patch_id].neighbors.size(); j++) {
-                // cout << "Checking neighbors" << endl;
-                if (!patch[patch[patch_id].neighbors.at(j)].isVisited && count(patch[patch[patch_id].neighbors.at(j)].v_ids.begin(), patch[patch[patch_id].neighbors.at(j)].v_ids.end(), v_id)) {
-                    patch_id = patch[patch_id].neighbors.at(j);
-                    cout << patch_id << endl;
-                    break;
-                }
-            }
-        }
-    }
-}*/
 
 void Mesh::setCornerNeighbors(vector<Face> patch) {
     for (int i = 0; i < patch.size(); i++) {
@@ -674,7 +461,6 @@ void Mesh::setCornerNeighbors(vector<Face> patch) {
     }
     int src_id = -1;
     vector<Edge> queue = boundary_edges;
-    // vector<Face> faces;
     vector<int> v_ids;
     while (!queue.empty()) {
         Edge e = boundary_edges[queue.back().id];
@@ -705,20 +491,41 @@ void Mesh::setCornerNeighbors(vector<Face> patch) {
             if (!neighborFound && !v_ids.empty()) {
                 src_id = -1;
                 if (v_ids.size() >= 4) {
-                    // faces.emplace_back(v_ids);
                     for (int i = 0; i < v_ids.size(); i++) {
-                        vertices.at(v_ids.at(i)).neighboring_corners.push_back(v_ids.at((i+1)%v_ids.size()));
+                        Vertex& v1 = vertices.at(v_ids.at(i));
+                        Vertex& v2 = vertices.at(v_ids.at((i+1)%v_ids.size()));
+                        corner_edges.emplace_back(v1.id, v2.id, corner_edges.size());
+                        v1.neighboring_corners.push_back(v2.id);
+                        // v2.neighboring_corners.push_back(v1.id);
                     }
                 }
+                mesh_faces.emplace_back(v_ids);
                 v_ids.clear();
+            }
+        }
+    }
+    for (int i = 0; i < corner_vertices.size(); i++) {
+        Vertex& v1 = vertices.at(corner_vertices.at(i));
+        for (int j = 0; j < v1.neighboring_corners.size(); j++) {
+            Vertex& v2 = vertices.at(v1.neighboring_corners.at(j));
+            // glm::vec3 d = glm::normalize(glm::vec3(v2.x - v1.x, v2.y - v1.y, v2.z - v1.z));
+            glm::vec3 d = glm::vec3(v2.x - v1.x, v2.y - v1.y, v2.z - v1.z);
+            // cout << stepSize << endl;
+            // cout << d[0] << " " << d[1] << " " << d[2] << endl;
+            double scaler = 0.001;
+            if (v1.mask_coords.empty()) {
+                v1.mask_coords = {v1.x + (scaler * d[0]), v1.y + (scaler * d[1]), v1.z + (scaler * d[2])};
+            } else {
+                v1.mask_coords[0] = v1.mask_coords[0] + (scaler * d[0]);
+                v1.mask_coords[1] = v1.mask_coords[1] + (scaler * d[1]);
+                v1.mask_coords[2] = v1.mask_coords[2] + (scaler * d[2]);
             }
         }
     }
 }
 
 vector<Edge> Mesh::extractFacesFromPatch(vector<Face> patch) {
-    // setStepSize(patch);
-
+    
     for (int i = 0; i < patch.size(); i++) {
         for (int j = i+1; j < patch.size(); j++) {
             if (containsVertices(patch[i].v_ids, patch[j].v_ids)) {
@@ -842,83 +649,10 @@ vector<double> Mesh::getBarycentricCoordinates(Vertex p, Face f) {
     return barycentric;
 }
 
-/*vector<Face> Mesh::extractFacesFromPatch(vector<Face> patch) {
-    for (int i = 0; i < patch.size(); i++) {
-        for (int j = i+1; j < patch.size(); j++) {
-            if (containsEdges(patch[i].v_ids, patch[j].v_ids)) {
-                patch[i].neighbors.push_back(j);
-                patch[j].neighbors.push_back(i);
-            }
-        }
-    }
-    vector<Edge> boundary_edges;
-    for (int i = 0; i < patch.size(); i++) {
-        for (int j = 0; j < patch[i].v_ids.size(); j++) {
-            if (vertices.at(patch[i].v_ids[j]).isBoundaryVertex && vertices.at(patch[i].v_ids[(j+1)%patch[i].v_ids.size()]).isBoundaryVertex) {
-                Edge e(patch[i].v_ids[j], patch[i].v_ids[(j+1)%patch[i].v_ids.size()], boundary_edges.size());
-                if (!edgeInNeighbors(e, patch, patch[i].neighbors)) {
-                    boundary_edges.push_back(e);
-                }
-            }
-        }
-    }
-    for (int i = 0; i < boundary_edges.size(); i++) {
-        for (int j = i + 1; j < boundary_edges.size(); j++) {
-            if (boundary_edges[i].v1 == boundary_edges[j].v1 || boundary_edges[i].v2 == boundary_edges[j].v2 ||
-                boundary_edges[i].v1 == boundary_edges[j].v2 || boundary_edges[i].v2 == boundary_edges[j].v1) {
-                boundary_edges[i].neighbors.push_back(j);
-                boundary_edges[j].neighbors.push_back(i);
-            }
-        }
-    }
-    int src_id = -1;
-    vector<Edge> queue = boundary_edges;
-    vector<Face> faces;
-    vector<int> v_ids;
-    while (!queue.empty()) {
-        Edge e = boundary_edges[queue.back().id];
-        if (boundary_edges[e.id].isVisited) {
-            queue.pop_back();
-        } else {
-            if (src_id == -1) {
-                src_id = e.v1;
-            }
-            if (vertices.at(src_id).isCornerVertex) {
-                v_ids.push_back(src_id);
-            }
-            boundary_edges[e.id].isVisited = true;
-            bool neighborFound = false;
-            for (int i = 0; i < e.neighbors.size(); i++) {
-                if (!boundary_edges[e.neighbors[i]].isVisited) {
-                    if (src_id == boundary_edges[e.neighbors[i]].v1) {
-                        src_id = boundary_edges[e.neighbors[i]].v2;
-                        queue.push_back(boundary_edges[e.neighbors[i]]);
-                        neighborFound = true;
-                    } else if (src_id == boundary_edges[e.neighbors[i]].v2) {
-                        src_id = boundary_edges[e.neighbors[i]].v1;
-                        queue.push_back(boundary_edges[e.neighbors[i]]);
-                        neighborFound = true;
-                    }
-                }
-            }
-            if (!neighborFound && !v_ids.empty()) {
-                src_id = -1;
-                if (v_ids.size() >= 4) {
-                    faces.emplace_back(v_ids);
-                }
-                v_ids.clear();
-            }
-        }
-    }
-    return faces;
-}*/
-
 vector<Face> Mesh::extractFaces() {
     vector<vector<Face>> patches = extractPatches();
     vector<Face> faces;
     for (int i = 0; i < patches.size(); i++) {
-        // vector<Face> f = extractFacesFromPatch(patches[i]);
-        // faces.insert(faces.end(), f.begin(), f.end());
     }
     return faces;
 }
@@ -960,57 +694,10 @@ void Mesh::computeNormal(int v_id0, int v_id1, int v_id2) {
     vector<double> b = getDirectionVector(v0, v2);
 
     vector<double> normal = normalizeVector(getCrossProduct(a, b));
-    // double normal_x = (a[1] * b[2]) - (a[2] * b[1]);
-    // double normal_y = (a[2] * b[0]) - (a[0] * b[2]);
-    // double normal_z = (a[0] * b[1]) - (a[1] * b[0]);
-
-    // double length = sqrt((normal_x * normal_x) + (normal_y * normal_y) + (normal_z * normal_z));
-
-    // double normal_array[] = {fabs(normal_x / length), fabs(normal_y / length), fabs(normal_z / length)};
-
     vertices.at(v_id0).normal_x = round(abs(normal[0])) || vertices.at(v_id0).normal_x;
     vertices.at(v_id0).normal_y = round(abs(normal[1])) || vertices.at(v_id0).normal_y;
     vertices.at(v_id0).normal_z = round(abs(normal[2])) || vertices.at(v_id0).normal_z;
     vertices.at(v_id0).normal_sum = vertices.at(v_id0).normal_x + vertices.at(v_id0).normal_y + vertices.at(v_id0).normal_z;
-}
-
-vector<Face> Mesh::refineFace(Face f) {
-    vector<Face> faces;
-    if (f.v_ids.size() == 4) {
-        faces.push_back(f);
-        return faces;
-    }
-    bool pointFound = false;
-    for (int i = 0; i < f.v_ids.size(); i++) {
-        Vertex p1 = vertices.at(f.v_ids.at(i));
-        for (int j = 0; j < f.v_ids.size(); j++) {
-            if (j == i || (j+1)%f.v_ids.size() == i || (j-1)%f.v_ids.size() == i || 
-                (j+1)%f.v_ids.size() == (i-1)%f.v_ids.size() || (j-1)%f.v_ids.size() == (i+1)%f.v_ids.size()) {
-                continue;
-            }
-            Vertex p2 = vertices.at(f.v_ids.at(j));
-            Vertex p3 = vertices.at(f.v_ids.at((j+1)%f.v_ids.size()));
-            vector<double> a = getDirectionVector(p2, p3);
-            vector<double> b = getDirectionVector(p2, p1);
-            double t = getDotProduct(a, b) / pow(getVectorLength(a), 2);
-            if (t > 0 && t < 1) {
-                cout << j << endl;
-                cout << i << endl;
-                cout << t << endl;
-                vector<double> intersection = {p2.x + (t * a[0]), p2.y + (t * a[1]), p2.z + (t * a[2])};
-                int id = vertices.size();
-                vertices.emplace_back(intersection[0], intersection[1], intersection[2], id);
-                pointFound = true;
-                f.v_ids.insert(f.v_ids.begin() + j, id);
-                break;    
-            }
-        }
-        if (pointFound) {
-            break;
-        }
-    }
-    faces.push_back(f);
-    return faces;
 }
 
 void Mesh::setStepSize(Face& f) {
@@ -1018,8 +705,6 @@ void Mesh::setStepSize(Face& f) {
         Vertex v1 = vertices.at(f.v_ids.at(j%f.v_ids.size()));
         Vertex v2 = vertices.at(f.v_ids.at((j+1)%f.v_ids.size()));
         double length = glm::distance(glm::vec3(v1.x, v1.y, v1.z), glm::vec3(v2.x, v2.y, v2.z));
-        // vector<double> diff = getDirectionVector(v1, v2);
-        // double length = getVectorLength(diff);
         if (length > 0 && stepSize > length * 0.5) {
             stepSize = length * 0.5;
         }
@@ -1082,20 +767,6 @@ vector<double> Mesh::rotateVector(vector<double> v, double angle, int axis) {
     } else if (axis == 2) {
         r = rZ * in;
     }
-    // vector<double> rotation = {v[0], v[1], v[2]};
-    // if (axis == 0) {
-    //     rotation[1] = doubleDifference(v[2] * sin(angle), v[1] * cos(angle));
-    //     rotation[2] = doubleDifference(v[2] * cos(angle), v[1] * sin(angle));
-    // } else if (axis == 1) {
-    //     rotation[0] = doubleDifference(v[2] * sin(angle), v[0] * cos(angle));
-    //     rotation[2] = doubleDifference(v[2] * cos(angle), -v[0] * sin(angle));
-    // } else if (axis == 2) {
-    //     rotation[0] = doubleDifference(v[1] * sin(angle), v[0] * cos(angle));
-    //     rotation[1] = doubleDifference(v[1] * cos(angle), v[0] * sin(angle));
-    // }
-    // rotation[0] = fabs(rotation[0]);
-    // rotation[1] = fabs(rotation[1]);
-    // rotation[2] = fabs(rotation[2]);
     r = glm::normalize(r);
     vector<double> rotation = {r[0], r[1], r[2]};
     return rotation;

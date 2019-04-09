@@ -4,6 +4,7 @@
 #include<string>
 #include<vector>
 #include <algorithm>
+#include "glm/glm.hpp"
 
 using namespace std;
 
@@ -16,6 +17,7 @@ class Vertex {
         int normal_x = 0;
         int normal_y = 0;
         int normal_z = 0;
+        vector<double> mask_coords;
         int normal_sum = 0;
         int visitCount = 0;
         vector<int> neighbors;
@@ -92,8 +94,9 @@ class Mesh {
         double PI = 3.14159265;
         vector<Vertex> vertices;
         vector<Cell> cells, surface_cells, boundary_cells, corner_cells;
-        vector<Face> faces, surface_faces, boundary_faces, corner_faces;
+        vector<Face> faces, surface_faces, boundary_faces, corner_faces, mesh_faces;
         vector<int> surface_vertices, boundary_vertices, corner_vertices;
+        vector<Edge> corner_edges;
         double stepSize = numeric_limits<double>::infinity();
         void addCell(vector<int> v_ids, int loc);
         void setTypes();
@@ -108,7 +111,6 @@ class Mesh {
         bool edgeInNeighbors(Edge e, vector<Face> patch, int id);
         bool containsEdges(vector<int> v_ids1, vector<int> v_ids2);
         bool containsVertices(vector<int> v_ids1, vector<int> v_ids2);
-        vector<Face> refineFace(Face f);
         void setStepSize(Face& f);
         vector<double> getCrossProduct(vector<double> a, vector<double> b);
         double getDotProduct(vector<double> a, vector<double> b);
@@ -120,9 +122,11 @@ class Mesh {
         vector<double> getBarycentricCoordinates(Vertex p, int cell_id);
         vector<Edge> getBoundaryEdges();
         int getCornerIndex(Face& f);
-        vector<double> getTraceDirection(Face& f, Edge e, int cell_id);
         vector<Edge> traceLineFromCorner(int corner_id, int c_id, vector<double> direction);
         vector<double> rotateVector(vector<double> v, double angle, int axis);
+        vector<vector<double>> getMaskCoords(Vertex& v);
+        bool isPointInsideVolume(vector<double> p);
+        bool isPointOnPlane(vector<double> p, Face& plane, glm::vec3 normal, vector<glm::vec3> directions);
 };
 
 #endif

@@ -6,6 +6,23 @@
 #include<vtkPoints.h>
 #include<vtkCellArray.h>
 
+#include "vtkDataSetMapper.h"
+#include "vtkProperty.h"
+#include "vtkVolumeProperty.h"
+#include "vtkColorTransferFunction.h"
+#include "vtkPiecewiseFunction.h"
+#include "vtkSphereSource.h"
+#include "vtkPolyDataMapper.h"
+#include "vtkActor.h"
+#include "vtkRenderWindow.h"
+#include "vtkRenderer.h"
+#include "vtkRenderWindowInteractor.h"
+#include "vtkUnstructuredGridVolumeRayCastMapper.h"
+#include "vtkDataSetTriangleFilter.h"
+#include "vtkUnstructuredGridVolumeMapper.h"
+#include "vtkProjectedTetrahedraMapper.h"
+#include "vtkFloatArray.h"
+#include "vtkPointData.h"
 
 #include<string>
 #include<iostream>
@@ -25,6 +42,29 @@ int main (int argc, char *argv[]) {
 		vtkPolyData* output = reader->GetPolyDataOutput();
 	} else if (reader->IsFileUnstructuredGrid()) {
 		vtkUnstructuredGrid* output = reader->GetUnstructuredGridOutput();
+		
+
+		/*vtkDataSetMapper *meshMapper = vtkDataSetMapper::New();
+		meshMapper->SetInputData(output);
+
+		vtkSmartPointer<vtkActor> meshActor = vtkSmartPointer<vtkActor>::New();
+		meshActor->SetMapper(meshMapper);
+
+		vtkRenderer *ren1 = vtkRenderer::New();
+		vtkRenderWindow *renWin = vtkRenderWindow::New();
+		renWin->AddRenderer(ren1);
+		ren1->AddActor(meshActor);
+
+		vtkRenderWindowInteractor *iren = vtkRenderWindowInteractor::New();
+    	iren->SetRenderWindow(renWin);
+
+		ren1->SetBackground(1,1,1);
+
+		renWin->Render();
+
+		iren->Initialize();
+    	iren->Start();*/
+
 		vtkPoints* meshPoints = output->GetPoints();
 		Mesh mesh;
 		int n_vertices = meshPoints->GetNumberOfPoints();
@@ -71,7 +111,7 @@ int main (int argc, char *argv[]) {
 						mesh.cells.at(i).neighbors.push_back(c_ids->GetId(c_id));
 					}
 				}
-			}			
+			}		
 		}
 		mesh.setTypes();
 		mesh.setNeighboringCorners();
@@ -95,8 +135,30 @@ int main (int argc, char *argv[]) {
 			// c.insert(c.begin(), edges.begin(), edges.end());
 		// }
 		// for (int j = 0; j < mesh.corner_cells.size(); j++) {
-			vector<Edge> c = mesh.getBoundaryEdges();
-			cout << "Did I actually arrive here?" << endl;
+			// cout << mesh.stepSize << endl;
+			// vector<Edge> c = mesh.getBoundaryEdges();
+			// cout << "Did I actually arrive here?" << endl;
+			vector<int> c;
+			for (int i = 0; i < mesh.corner_vertices.size(); i++) {
+				Vertex& v = mesh.vertices.at(mesh.corner_vertices.at(i));
+				vector<vector<double>> mask_points = mesh.getMaskCoords(v);
+				for (int j = 0; j < mask_points.size(); j++) {
+					vector<double> p = mask_points.at(j);
+					int id = mesh.vertices.size();
+					mesh.vertices.emplace_back(p[0], p[1], p[2], id);
+					c.push_back(id);
+				}
+				break;
+			}
+			// vector<Face> c = mesh.mesh_faces;
+			// int num_points = 0;
+			// for (int i = 0; i < c.size(); i++) {
+			// 	for (int j = 0; j < c.at(i).v_ids.size(); j++) {
+			// 		num_points += 1;
+			// 	}
+			// 	num_points += 1;
+			// }
+			// cout << num_points << endl;
 			cout << c.size() << endl;
 
 			ofstream outputFile;
@@ -116,23 +178,23 @@ int main (int argc, char *argv[]) {
 			// for (int i = 0; i < ncells; i++) {
 			// 	num_points += (1 + c.at(i).v_ids.size());
 			// }
-			outputFile << "CELLS " << ncells << " " << ncells * 3 << endl;
+			outputFile << "CELLS " << ncells << " " << ncells * 2 << endl;
 			for (int i = 0; i < ncells; i++) {
 				// outputFile << c.at(i).v_ids.size() << " ";
 				// for (int j = 0; j < c.at(i).v_ids.size(); j++) {
 				// 	outputFile << c.at(i).v_ids.at(j) << " ";
 				// }
 				// outputFile << endl;
-				// // outputFile << "1 " << c.at(0).v_ids.at(i) << endl;
-				outputFile << "2 " << c.at(i).v1 << " " << c.at(i).v2 << endl;
+				outputFile << "1 " << c.at(i) << endl;
+				// outputFile << "2 " << c.at(i).v1 << " " << c.at(i).v2 << endl;
 			}
 
 
 			outputFile << "CELL_TYPES " << ncells << endl;
 			for (int i = 0; i < ncells; i++) {
-				outputFile << "3" << endl;
+				outputFile << "1" << endl;
 			}
 		// }
-	}
+	// }
   	return EXIT_SUCCESS;
 }
