@@ -251,7 +251,7 @@ bool Mesh::isPointInsideVolume(vector<double> p) {
     for (int i = 0; i < directions.size(); i++) {
         int count = 0;
         glm::vec3 d = glm::vec3(directions.at(i)[0], directions.at(i)[1], directions.at(i)[2]);
-        cout << "Direction at " << i << ": " << d[0] << " " << d[1] << " " << d[2] << endl;
+        // cout << "Direction at " << i << ": " << d[0] << " " << d[1] << " " << d[2] << endl;
         for (int j = 0; j < mesh_faces.size(); j++) {
             // cout << "Face at " << j << endl; 
             bool doesLineIntersectPlane = false;
@@ -428,6 +428,8 @@ void Mesh::setNeighboringCorners() {
     for (int i = 0; i < patches.size(); i++) {
         setCornerNeighbors(patches[i]);
     }
+    setStepSizes();
+    setCornersUVWcoords();
 }
 
 void Mesh::setCornerNeighbors(vector<Face> patch) {
@@ -504,24 +506,157 @@ void Mesh::setCornerNeighbors(vector<Face> patch) {
             }
         }
     }
+}
+
+void Mesh::setCornersUVWcoords() {
+    vector<glm::vec3> directions = {
+        glm::vec3(1, 0, 0),
+        glm::vec3(0, 1, 0),
+        glm::vec3(0, 0, 1),
+    };
+    for (int i = 0; i < corner_edges.size(); i++) {
+        Vertex& v1 = vertices.at(corner_edges.at(i).v1);
+        Vertex& v2 = vertices.at(corner_edges.at(i).v2);
+        glm::vec3 v = glm::normalize(glm::vec3(v2.x - v1.x, v2.y - v1.y, v2.z - v1.z));
+        // stepSizeX = stepSizeY = stepSizeZ = stepSize;
+        if (round(abs(glm::dot(v, directions[0]))) == 1) {
+            double p1 = floor(v1.x / stepSizeX) * stepSizeX;
+            double p2 = ceil(v1.x / stepSizeX) * stepSizeX;
+            double p3 = floor(v2.x / stepSizeX) * stepSizeX;
+            double p4 = ceil(v2.x / stepSizeX) * stepSizeX;
+            if (abs(p1 - v1.x) / abs(v2.x - v1.x) < 1 && abs(p1 - v2.x) / abs(v2.x - v1.x) < 1) {
+                v1.u = p1;
+            } else {
+                v1.u = p2;
+            }
+            if (abs(p3 - v1.x) / abs(v2.x - v1.x) < 1 && abs(p3 - v2.x) / abs(v2.x - v1.x) < 1) {
+                v2.u = p3;
+            } else {
+                v2.u = p4;
+            }
+        } else if (round(abs(glm::dot(v, directions[1]))) == 1) {
+            double p1 = floor(v1.y / stepSizeY) * stepSizeY;
+            double p2 = ceil(v1.y / stepSizeY) * stepSizeY;
+            double p3 = floor(v2.y / stepSizeY) * stepSizeY;
+            double p4 = ceil(v2.y / stepSizeY) * stepSizeY;
+            if (abs(p1 - v1.y) / abs(v2.y - v1.y) < 1 && abs(p1 - v2.y) / abs(v2.y - v1.y) < 1) {
+                v1.v = p1;
+            } else {
+                v1.v = p2;
+            }
+            if (abs(p3 - v1.y) / abs(v2.y - v1.y) < 1 && abs(p3 - v2.y) / abs(v2.y - v1.y) < 1) {
+                v2.v = p3;
+            } else {
+                v2.v = p4;
+            }
+        } else if (round(abs(glm::dot(v, directions[2]))) == 1) {
+            double p1 = floor(v1.z / stepSizeZ) * stepSizeZ;
+            double p2 = ceil(v1.z / stepSizeZ) * stepSizeZ;
+            double p3 = floor(v2.z / stepSizeZ) * stepSizeZ;
+            double p4 = ceil(v2.z / stepSizeZ) * stepSizeZ;
+            if (abs(p1 - v1.z) / abs(v2.z - v1.z) < 1 && abs(p1 - v2.z) / abs(v2.z - v1.z) < 1) {
+                v1.w = p1;
+            } else {
+                v1.w = p2;
+            }
+            if (abs(p3 - v1.z) / abs(v2.z - v1.z) < 1 && abs(p3 - v2.z) / abs(v2.z - v1.z) < 1) {
+                v2.w = p3;
+            } else {
+                v2.w = p4;
+            }
+        }
+    }
     for (int i = 0; i < corner_vertices.size(); i++) {
         Vertex& v1 = vertices.at(corner_vertices.at(i));
         for (int j = 0; j < v1.neighboring_corners.size(); j++) {
             Vertex& v2 = vertices.at(v1.neighboring_corners.at(j));
-            // glm::vec3 d = glm::normalize(glm::vec3(v2.x - v1.x, v2.y - v1.y, v2.z - v1.z));
-            glm::vec3 d = glm::vec3(v2.x - v1.x, v2.y - v1.y, v2.z - v1.z);
-            // cout << stepSize << endl;
-            // cout << d[0] << " " << d[1] << " " << d[2] << endl;
-            double scaler = 0.001;
-            if (v1.mask_coords.empty()) {
-                v1.mask_coords = {v1.x + (scaler * d[0]), v1.y + (scaler * d[1]), v1.z + (scaler * d[2])};
-            } else {
-                v1.mask_coords[0] = v1.mask_coords[0] + (scaler * d[0]);
-                v1.mask_coords[1] = v1.mask_coords[1] + (scaler * d[1]);
-                v1.mask_coords[2] = v1.mask_coords[2] + (scaler * d[2]);
+
+            glm::vec3 v = glm::normalize(glm::vec3(v2.x - v1.x, v2.y - v1.y, v2.z - v1.z));
+            if (round(abs(glm::dot(v, directions[0]))) == 1) {
+                if (v1.v != v2.v || v1.w != v2.w) {
+                    vector<double> p1 = {v1.u, v2.v, v2.w};
+                    vector<double> p2 = {v2.u, v1.v, v1.w};
+                    if (isPointOutside(p1, v1)) {
+                        v2.v = v1.v;
+                        v2.w = v1.w;
+                    } else if (isPointOutside(p2, v2)) {
+                        v1.v = v2.v;
+                        v1.w = v2.w;
+                    }
+                }
+                // if (v1.w != v2.w) {
+                //     vector<double> p1 = {v1.u, v1.v, v2.w};
+                //     vector<double> p2 = {v2.u, v2.v, v1.w};
+                //     if (isPointOutside(p1, v1)) {
+                //         v2.w = v1.w;
+                //     } else if (isPointOutside(p2, v2)) {
+                //         v1.w = v2.w;
+                //     } else {
+                //         v1.w = v2.w;
+                //     }
+                // }
+            } else if (round(abs(glm::dot(v, directions[1]))) == 1) {
+                if (v1.u != v2.u || v1.w != v2.w) {
+                    vector<double> p1 = {v2.u, v1.v, v2.w};
+                    vector<double> p2 = {v1.u, v2.v, v1.w};
+                    if (isPointOutside(p1, v1)) {
+                        v2.u = v1.u;
+                        v2.w = v1.w;
+                    } else if (isPointOutside(p2, v2)) {
+                        v1.u = v2.u;
+                        v1.w = v2.w;
+                    }
+                }
+                // if (v1.w != v2.w) {
+                //     vector<double> p1 = {v1.u, v1.v, v2.w};
+                //     vector<double> p2 = {v2.u, v2.v, v1.w};
+                //     if (isPointOutside(p1, v1)) {
+                //         v2.w= v1.w;
+                //     } else if (isPointOutside(p2, v2)) {
+                //         v1.w = v2.w;
+                //     } else {
+                //         v1.w = v2.w;
+                //     }
+                // }
+            } else if (round(abs(glm::dot(v, directions[2]))) == 1) {
+                if (v1.u != v2.u || v1.v != v2.v) {
+                    vector<double> p1 = {v2.u, v2.v, v1.w};
+                    vector<double> p2 = {v1.u, v1.v, v2.w};
+                    if (isPointOutside(p1, v1)) {
+                        v2.u = v1.u;
+                        v2.v = v1.v;
+                    } else if (isPointOutside(p2, v2)) {
+                        v1.u = v2.u;
+                        v1.v = v2.v;
+                    }
+                }
+                // if (v1.u != v2.u) {
+                //     vector<double> p1 = {v2.u, v1.v, v1.w};
+                //     vector<double> p2 = {v1.u, v2.v, v2.w};
+                //     if (isPointOutside(p1, v1)) {
+                //         v2.u = v1.u;
+                //     } else if (isPointOutside(p2, v2)) {
+                //         v1.u = v2.u;
+                //     } else {
+                //         v1.u = v2.u;
+                //     }
+                // }
             }
         }
     }
+}
+
+bool Mesh::isPointOutside(vector<double> p, Vertex& v) {
+    bool output = true;
+    Vertex p1(p[0], p[1], p[2], -1);
+    for (int i = 0; i < v.cells_ids.size(); i++) {
+        vector<double> b_coords = getBarycentricCoordinates(p1, v.cells_ids.at(i));
+        if (b_coords[0] >= 0 && b_coords[0] <= 1 && b_coords[1] >= 0 && b_coords[1] <= 1 && b_coords[2] >= 0 && b_coords[2] <= 1) {
+            output = false;
+            break;
+        }
+    }
+    return output;
 }
 
 vector<Edge> Mesh::extractFacesFromPatch(vector<Face> patch) {
@@ -705,8 +840,31 @@ void Mesh::setStepSize(Face& f) {
         Vertex v1 = vertices.at(f.v_ids.at(j%f.v_ids.size()));
         Vertex v2 = vertices.at(f.v_ids.at((j+1)%f.v_ids.size()));
         double length = glm::distance(glm::vec3(v1.x, v1.y, v1.z), glm::vec3(v2.x, v2.y, v2.z));
-        if (length > 0 && stepSize > length * 0.5) {
-            stepSize = length * 0.5;
+        double factor = 1;
+        if (length > 0 && stepSize > length * factor) {
+            stepSize = length * factor;
+        }
+    }
+}
+
+void Mesh::setStepSizes() {
+    vector<glm::vec3> directions = {
+        glm::vec3(1, 0, 0),
+        glm::vec3(0, 1, 0),
+        glm::vec3(0, 0, 1),
+    };
+    for (int i = 0; i < corner_edges.size(); i++) {
+        Vertex& v1 = vertices.at(corner_edges.at(i).v1);
+        Vertex& v2 = vertices.at(corner_edges.at(i).v2);
+        glm::vec3 v = glm::normalize(glm::vec3(v2.x - v1.x, v2.y - v1.y, v2.z - v1.z));
+        double factor = 0.2;
+        double length = glm::length(glm::vec3(v2.x - v1.x, v2.y - v1.y, v2.z - v1.z));
+        if (round(abs(glm::dot(v, directions[0]))) == 1 && stepSizeX > (length * factor)) {
+            stepSizeX = length * factor;
+        } else if (round(abs(glm::dot(v, directions[1]))) == 1 && stepSizeY > (length * factor)) {
+            stepSizeY = length * factor;
+        } else if (round(abs(glm::dot(v, directions[2]))) == 1 && stepSizeZ > (length * factor)) {
+            stepSizeZ = length * factor;
         }
     }
 }

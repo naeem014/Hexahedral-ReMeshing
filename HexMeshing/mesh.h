@@ -17,6 +17,7 @@ class Vertex {
         int normal_x = 0;
         int normal_y = 0;
         int normal_z = 0;
+        double u, v, w;
         vector<double> mask_coords;
         int normal_sum = 0;
         int visitCount = 0;
@@ -98,6 +99,9 @@ class Mesh {
         vector<int> surface_vertices, boundary_vertices, corner_vertices;
         vector<Edge> corner_edges;
         double stepSize = numeric_limits<double>::infinity();
+        double stepSizeX = numeric_limits<double>::infinity();
+        double stepSizeY = numeric_limits<double>::infinity();
+        double stepSizeZ = numeric_limits<double>::infinity();
         void addCell(vector<int> v_ids, int loc);
         void setTypes();
         void computeNormal(int v_id0, int v_id1, int v_id2);
@@ -112,6 +116,8 @@ class Mesh {
         bool containsEdges(vector<int> v_ids1, vector<int> v_ids2);
         bool containsVertices(vector<int> v_ids1, vector<int> v_ids2);
         void setStepSize(Face& f);
+        void setStepSizes();
+        void setCornersUVWcoords();
         vector<double> getCrossProduct(vector<double> a, vector<double> b);
         double getDotProduct(vector<double> a, vector<double> b);
         double getVectorLength(vector<double> v);
@@ -127,6 +133,7 @@ class Mesh {
         vector<vector<double>> getMaskCoords(Vertex& v);
         bool isPointInsideVolume(vector<double> p);
         bool isPointOnPlane(vector<double> p, Face& plane, glm::vec3 normal, vector<glm::vec3> directions);
+        bool isPointOutside(vector<double> p, Vertex& v);
 };
 
 #endif
