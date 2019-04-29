@@ -134,6 +134,7 @@ class Mesh {
         bool isPointInsideVolume(vector<double> p);
         bool isPointOnPlane(vector<double> p, Face& plane, glm::vec3 normal, vector<glm::vec3> directions);
         bool isPointOutside(vector<double> p, Vertex& v);
+        void alignNeighbors(Vertex& v, int direction);
 };
 
 #endif

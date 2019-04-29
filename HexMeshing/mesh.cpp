@@ -68,6 +68,12 @@ void Mesh::setTypes() {
             }
         }
     }
+    for (int i = 0; i < corner_vertices.size(); i++) {
+        if (count(corner_vertices.begin(), corner_vertices.end(), corner_vertices.at(i)) > 1) {
+            corner_vertices.erase(corner_vertices.begin() + i);
+            i = 0;
+        }
+    }
 }
 
 vector<vector<Face>> Mesh::extractPatches() {
@@ -568,80 +574,113 @@ void Mesh::setCornersUVWcoords() {
     }
     for (int i = 0; i < corner_vertices.size(); i++) {
         Vertex& v1 = vertices.at(corner_vertices.at(i));
-        for (int j = 0; j < v1.neighboring_corners.size(); j++) {
-            Vertex& v2 = vertices.at(v1.neighboring_corners.at(j));
-
-            glm::vec3 v = glm::normalize(glm::vec3(v2.x - v1.x, v2.y - v1.y, v2.z - v1.z));
-            if (round(abs(glm::dot(v, directions[0]))) == 1) {
-                if (v1.v != v2.v || v1.w != v2.w) {
-                    vector<double> p1 = {v1.u, v2.v, v2.w};
-                    vector<double> p2 = {v2.u, v1.v, v1.w};
-                    if (isPointOutside(p1, v1)) {
-                        v2.v = v1.v;
-                        v2.w = v1.w;
-                    } else if (isPointOutside(p2, v2)) {
+        vector<double> p1 = {v1.u, v1.v, v1.w};
+        if (isPointOutside(p1, v1)) {
+            for (int j = 0; j < v1.neighboring_corners.size(); j++) {
+                Vertex& v2 = vertices.at(v1.neighboring_corners.at(j));
+                vector<double> p2 = {v2.u, v2.v, v2.w};
+                if (isPointOutside(p2, v2)) {
+                    continue;
+                }
+                glm::vec3 v = glm::normalize(glm::vec3(v2.x - v1.x, v2.y - v1.y, v2.z - v1.z));
+                if (round(abs(glm::dot(v, directions[0]))) == 1) {
+                    if (v1.v != v2.v) {
                         v1.v = v2.v;
+                        alignNeighbors(v1, 1);
+                    }
+                    if (v1.w != v2.w) {
                         v1.w = v2.w;
+                        alignNeighbors(v1, 2);
                     }
                 }
-                // if (v1.w != v2.w) {
-                //     vector<double> p1 = {v1.u, v1.v, v2.w};
-                //     vector<double> p2 = {v2.u, v2.v, v1.w};
-                //     if (isPointOutside(p1, v1)) {
-                //         v2.w = v1.w;
-                //     } else if (isPointOutside(p2, v2)) {
-                //         v1.w = v2.w;
-                //     } else {
-                //         v1.w = v2.w;
-                //     }
-                // }
-            } else if (round(abs(glm::dot(v, directions[1]))) == 1) {
-                if (v1.u != v2.u || v1.w != v2.w) {
-                    vector<double> p1 = {v2.u, v1.v, v2.w};
-                    vector<double> p2 = {v1.u, v2.v, v1.w};
-                    if (isPointOutside(p1, v1)) {
-                        v2.u = v1.u;
-                        v2.w = v1.w;
-                    } else if (isPointOutside(p2, v2)) {
+                if (round(abs(glm::dot(v, directions[1]))) == 1) {
+                    if (v1.u != v2.u) {
                         v1.u = v2.u;
+                        alignNeighbors(v1, 0);
+                    }
+                    if (v1.w != v2.w) {
                         v1.w = v2.w;
+                        alignNeighbors(v1, 2);
                     }
                 }
-                // if (v1.w != v2.w) {
-                //     vector<double> p1 = {v1.u, v1.v, v2.w};
-                //     vector<double> p2 = {v2.u, v2.v, v1.w};
-                //     if (isPointOutside(p1, v1)) {
-                //         v2.w= v1.w;
-                //     } else if (isPointOutside(p2, v2)) {
-                //         v1.w = v2.w;
-                //     } else {
-                //         v1.w = v2.w;
-                //     }
-                // }
-            } else if (round(abs(glm::dot(v, directions[2]))) == 1) {
-                if (v1.u != v2.u || v1.v != v2.v) {
-                    vector<double> p1 = {v2.u, v2.v, v1.w};
-                    vector<double> p2 = {v1.u, v1.v, v2.w};
-                    if (isPointOutside(p1, v1)) {
-                        v2.u = v1.u;
-                        v2.v = v1.v;
-                    } else if (isPointOutside(p2, v2)) {
+                if (round(abs(glm::dot(v, directions[2]))) == 1) {
+                    if (v1.u != v2.u) {
                         v1.u = v2.u;
+                        alignNeighbors(v1, 0);
+                    }
+                    if (v1.v != v2.v) {
                         v1.v = v2.v;
+                        alignNeighbors(v1, 1);
                     }
                 }
-                // if (v1.u != v2.u) {
-                //     vector<double> p1 = {v2.u, v1.v, v1.w};
-                //     vector<double> p2 = {v1.u, v2.v, v2.w};
-                //     if (isPointOutside(p1, v1)) {
-                //         v2.u = v1.u;
-                //     } else if (isPointOutside(p2, v2)) {
-                //         v1.u = v2.u;
-                //     } else {
-                //         v1.u = v2.u;
-                //     }
-                // }
             }
+        }    
+    }
+    
+    for (int i = 0; i < corner_edges.size(); i++) {
+        Vertex& v1 = vertices.at(corner_edges.at(i).v1);
+        Vertex& v2 = vertices.at(corner_edges.at(i).v2);
+
+        glm::vec3 v = glm::normalize(glm::vec3(v2.x - v1.x, v2.y - v1.y, v2.z - v1.z));
+        if (round(abs(glm::dot(v, directions[0]))) == 1) {
+            if (v1.v != v2.v) {
+                v1.v = v2.v;
+                alignNeighbors(v1, 1);
+                i = 0;
+            }
+            if (v1.w != v2.w) {
+                v1.w = v2.w;
+                alignNeighbors(v1, 2);
+                i = 0;
+            }
+        } else if (round(abs(glm::dot(v, directions[1]))) == 1) {
+            if (v1.u != v2.u) {
+                v1.u = v2.u;
+                alignNeighbors(v1, 0);
+                i = 0;
+            }
+            if (v1.w != v2.w) {
+                v1.w = v2.w;
+                alignNeighbors(v1, 2);
+                i = 0;
+            }
+        } else if (round(abs(glm::dot(v, directions[2]))) == 1) {
+            if (v1.v != v2.v) {
+                v1.v = v2.v;
+                alignNeighbors(v1, 1);
+                i = 0;
+            }
+            if (v1.u != v2.u) {
+                v1.u = v2.u;
+                alignNeighbors(v1, 0);
+                i = 0;
+            }
+        }
+    }
+}
+
+void Mesh::alignNeighbors(Vertex& v, int direction) {
+    vector<glm::vec3> directions = {
+        glm::vec3(1, 0, 0),
+        glm::vec3(0, 1, 0),
+        glm::vec3(0, 0, 1),
+    };
+    
+    for (int i = 0; i < v.neighboring_corners.size(); i++) {
+        Vertex& n = vertices.at(v.neighboring_corners.at(i));
+        glm::vec3 d = glm::normalize(glm::vec3(v.x - n.x, v.y - n.y, v.z - n.z));
+        if (round(abs(glm::dot(d, directions[direction]))) == 1) {
+            continue;
+        }
+        if (direction == 0 && n.u != v.u) {
+            n.u = v.u;
+            alignNeighbors(n, direction);
+        } else if (direction == 1 && n.v != v.v) {
+            n.v = v.v;
+            alignNeighbors(n, direction);
+        } else if (direction == 2 && n.w != v.w) {
+            n.w = v.w;
+            alignNeighbors(n, direction);
         }
     }
 }
@@ -857,7 +896,7 @@ void Mesh::setStepSizes() {
         Vertex& v1 = vertices.at(corner_edges.at(i).v1);
         Vertex& v2 = vertices.at(corner_edges.at(i).v2);
         glm::vec3 v = glm::normalize(glm::vec3(v2.x - v1.x, v2.y - v1.y, v2.z - v1.z));
-        double factor = 0.2;
+        double factor = 0.1;
         double length = glm::length(glm::vec3(v2.x - v1.x, v2.y - v1.y, v2.z - v1.z));
         if (round(abs(glm::dot(v, directions[0]))) == 1 && stepSizeX > (length * factor)) {
             stepSizeX = length * factor;
