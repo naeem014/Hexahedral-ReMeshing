@@ -23,6 +23,11 @@
 #include "vtkProjectedTetrahedraMapper.h"
 #include "vtkFloatArray.h"
 #include "vtkPointData.h"
+#include "vtkImageData.h"
+#include "vtkCoordinate.h"
+#include "vtkSphereSource.h"
+#include "vtkButtonWidget.h"
+#include "vtkTexturedButtonRepresentation2D.h"
 
 #include<string>
 #include<iostream>
@@ -32,6 +37,45 @@
 #include "Mesh.h"
 
 using namespace std;
+
+vector<unsigned char> readPNG(const char* filename) {
+	vector<unsigned char> image;
+	unsigned width, height;
+	return image;
+}
+
+void CreateImage(vtkSmartPointer<vtkImageData> image,
+                 unsigned char* color1,
+                 unsigned char* color2)
+{
+  // Specify the size of the image data
+  image->SetDimensions(10, 10, 1);
+  image->AllocateScalars(VTK_UNSIGNED_CHAR, 3);
+
+  int* dims = image->GetDimensions();
+
+  // Fill the image with
+  for (int y = 0; y < dims[1]; y++)
+  {
+    for (int x = 0; x < dims[0]; x++)
+    {
+      unsigned char* pixel =
+        static_cast<unsigned char*>(image->GetScalarPointer(x, y, 0));
+      if (x < 5)
+      {
+        pixel[0] = color1[0];
+        pixel[1] = color1[1];
+        pixel[2] = color1[2];
+      }
+      else
+      {
+        pixel[0] = color2[0];
+        pixel[1] = color2[1];
+        pixel[2] = color2[2];
+      }
+    }
+  }
+}
 
 int main (int argc, char *argv[]) {
 	string input_filename  = argv[1];
@@ -54,22 +98,64 @@ int main (int argc, char *argv[]) {
 		vtkRenderWindow *renWin = vtkRenderWindow::New();
 		renWin->AddRenderer(ren1);
 		ren1->AddActor(meshActor);
+		renWin->FullScreenOn();
+		// renWin->SetCurrentCursor(VTK_CURSOR_CROSSHAIR);
+
+		vtkSmartPointer<vtkImageData> image1 = vtkSmartPointer<vtkImageData>::New();
+		vtkSmartPointer<vtkImageData> image2 =	vtkSmartPointer<vtkImageData>::New();
+		unsigned char banana[3] = { 227, 207, 87 };
+		unsigned char tomato[3] = { 255, 99, 71 };
+		CreateImage(image1, banana, tomato);
+		CreateImage(image2, tomato, banana);
 
 		vtkRenderWindowInteractor *iren = vtkRenderWindowInteractor::New();
+
+		vtkSmartPointer<vtkTexturedButtonRepresentation2D> buttonRepresentation =
+			vtkSmartPointer<vtkTexturedButtonRepresentation2D>::New();
+		buttonRepresentation->SetNumberOfStates(2);
+		buttonRepresentation->SetButtonTexture(0, image1);
+		buttonRepresentation->SetButtonTexture(1, image2);
+
+		vtkSmartPointer<vtkButtonWidget> buttonWidget =
+			vtkSmartPointer<vtkButtonWidget>::New();
+		buttonWidget->SetInteractor(iren);
+		buttonWidget->SetRepresentation(buttonRepresentation);
+
     	iren->SetRenderWindow(renWin);
 
-		ren1->SetBackground(1,1,1);
+		ren1->SetBackground(0.8,0.3,0.3);
 
 		renWin->Render();
 
-		iren->Initialize();
-    	iren->Start();*/
+		vtkSmartPointer<vtkCoordinate> upperRight =
+			vtkSmartPointer<vtkCoordinate>::New();
+		upperRight->SetCoordinateSystemToNormalizedDisplay();
+		upperRight->SetValue(1.0, 1.0);
 
+		double bds[6];
+		double sz = 50.0;
+		bds[0] = upperRight->GetComputedDisplayValue(ren1)[0] - sz;
+		bds[1] = bds[0] + sz;
+		bds[2] = upperRight->GetComputedDisplayValue(ren1)[1] - sz;
+		bds[3] = bds[2] + sz;
+		bds[4] = bds[5] = 0.0;
+
+		// Scale to 1, default is .5
+		buttonRepresentation->SetPlaceFactor(1);
+		buttonRepresentation->PlaceWidget(bds);
+
+		buttonWidget->On();
+
+
+		iren->Initialize();
+    	iren->Start();
+		iren->StartPinchEvent();*/
 		vtkPoints* meshPoints = output->GetPoints();
 		Mesh mesh;
 		int n_vertices = meshPoints->GetNumberOfPoints();
 		mesh.vertices.resize(n_vertices);
 		double p[3];
+		double scaleUpFactor = 1;
 		for (vtkIdType i = 0; i < n_vertices; i++) {
 			meshPoints->GetPoint(i, p);
 			Vertex v(p[0], p[1], p[2], i);
@@ -140,17 +226,23 @@ int main (int argc, char *argv[]) {
 			// vector<Edge> c = mesh.getBoundaryEdges();
 			// cout << "Did I actually arrive here?" << endl;
 			// vector<int> c;
-			vector<Edge> c;
+			vector<Edge> c = mesh.getBoundaryEdges();
+			
 			for (int i = 0; i < mesh.corner_edges.size(); i++) {
-				Vertex& v1 = mesh.vertices.at(mesh.corner_edges.at(i).v1);
+				Vertex v1 = mesh.vertices.at(mesh.corner_edges.at(i).v1);
 				int id1 = mesh.vertices.size();
 				mesh.vertices.emplace_back(v1.u, v1.v, v1.w, id1);
-				for (int j = 0; j < v1.neighboring_corners.size(); j++) {
-					Vertex& v2 = mesh.vertices.at(v1.neighboring_corners.at(j));
-					int id2 = mesh.vertices.size();
-					mesh.vertices.emplace_back(v2.u, v2.v, v2.w, id2);
-					c.emplace_back(id1, id2, c.size());
-				}
+				Vertex v2 = mesh.vertices.at(mesh.corner_edges.at(i).v2);
+				int id2 = mesh.vertices.size();
+				mesh.vertices.emplace_back(v2.u, v2.v, v2.w, id2);
+				c.emplace_back(id1, id2, c.size());
+				
+			// 	for (int j = 0; j < v1.neighboring_corners.size(); j++) {
+			// 		Vertex& v2 = mesh.vertices.at(v1.neighboring_corners.at(j));
+			// 		int id2 = mesh.vertices.size();
+			// 		mesh.vertices.emplace_back(v2.u, v2.v, v2.w, id2);
+			// 		c.emplace_back(id1, id2, c.size());
+			// 	}
 			// 	vector<vector<double>> mask_points = mesh.getMaskCoords(v);
 			// 	for (int j = 0; j < mask_points.size(); j++) {
 			// 		vector<double> p = mask_points.at(j);
@@ -158,9 +250,9 @@ int main (int argc, char *argv[]) {
 			// cout << "u: " << v.u << " v: " << v.v << " w: " << v.w << endl;
 			// cout << "=======================================================" << endl;
  				
-			// 	}
-			// 	break;
 			}
+			// 	break;
+			// }
 			// vector<Face> c = mesh.mesh_faces;
 			// int num_points = 0;
 			// for (int i = 0; i < c.size(); i++) {

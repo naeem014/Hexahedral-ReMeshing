@@ -135,6 +135,8 @@ class Mesh {
         bool isPointOnPlane(vector<double> p, Face& plane, glm::vec3 normal, vector<glm::vec3> directions);
         bool isPointOutside(vector<double> p, Vertex& v);
         void alignNeighbors(Vertex& v, int direction);
+        vector<Edge> traceLineFromCorner(int v_id, vector<double> direction, double step);
+        void scale();
 };
 
 #endif
