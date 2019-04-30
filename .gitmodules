@@ -1,3 +1,6 @@
 [submodule "glm"]
 	path = glm
 	url = git://github.com/g-truc/glm.git
+[submodule "lodepng"]
+	path = lodepng
+	url = https://github.com/lvandeve/lodepng.git
