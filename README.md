@@ -7,7 +7,7 @@ Remeshing Tetrahedral Polycube models to Hexahedral mesh. This project takes a v
 - Enter the project directory and make new directory e.g mkdir build
 - Open CMake GUI which can be downloaded from here: https://cmake.org/download/
 - Click Browse source and select the project directory
-- Click Brose build and select the build folder inside project directory
+- Click Browse build and select the build folder inside project directory
 - Click Configure
 - Click Generate
 - Click Open Project (The project will be opened in Visual Studio. The latest version of Visual Studio is recommended.)
