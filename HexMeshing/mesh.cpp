@@ -253,11 +253,11 @@ vector<Edge> Mesh::traceLineFromCorner(int v_id, vector<double> direction, doubl
         vector<double> b_coords = getBarycentricCoordinates(end, c_id);
         if (b_coords[0] >= 0 && b_coords[0] <= 1 && b_coords[1] >= 0 && b_coords[1] <= 1
             && b_coords[2] >= 0 && b_coords[2] <= 1 && b_coords[3] >= 0 && b_coords[3] <= 1) {
-            cout << b_coords[0] << " " << b_coords[1] << " " << b_coords[2] << " " << b_coords[3] << endl;
+            // cout << b_coords[0] << " " << b_coords[1] << " " << b_coords[2] << " " << b_coords[3] << endl;
             initial = new_end;
             continue;
         } else {
-            cout << "==========================================" << endl;
+            // cout << "==========================================" << endl;
             c_id = -1;
             continue;
         }
@@ -500,7 +500,7 @@ void print_vector(string message, vector<double> v) {
 }
 
 void Mesh::setNeighboringCorners() {
-    vector<vector<Face>> patches = extractPatches();
+    patches = extractPatches();
     for (int i = 0; i < patches.size(); i++) {
         setCornerNeighbors(patches[i]);
     }

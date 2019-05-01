@@ -98,6 +98,7 @@ class Mesh {
         vector<Face> faces, surface_faces, boundary_faces, corner_faces, mesh_faces;
         vector<int> surface_vertices, boundary_vertices, corner_vertices;
         vector<Edge> corner_edges;
+        vector<vector<Face>> patches;
         double stepSize = numeric_limits<double>::infinity();
         double stepSizeX = numeric_limits<double>::infinity();
         double stepSizeY = numeric_limits<double>::infinity();
