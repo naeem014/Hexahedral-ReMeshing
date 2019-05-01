@@ -8,7 +8,7 @@ Remeshing Tetrahedral Polycube models to Hexahedral mesh. This project takes a v
 - Microsoft Visual Studio
 
 ## Project setup
-- Clone the project to local machine.
+- Clone the project to local machine using: git clone --recursive https://github.com/naeem014/Hexahedral-ReMeshing.git.
 - Enter the project directory and make new directory e.g mkdir build
 - Open CMake GUI
 - Click Browse source and select the project directory
