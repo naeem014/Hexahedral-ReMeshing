@@ -17,7 +17,7 @@ Remeshing Tetrahedral Polycube models to Hexahedral mesh. This project takes a v
 - Click Generate
 - Click Open Project (The project will be opened in Visual Studio. The latest version of Visual Studio is recommended.)
 - Build the project in Visual Studio
-- Open terminal and navigate to build/Debug inside the project directory
-- Run ./HexMeshing ../../Examples/kitty/polycube.tet.vtk
+- Open terminal and navigate to build/HexMEshing/Debug or build/Debug inside the project directory
+- Run ./HexMeshing ../../Examples/kitty/polycube.tet.vtk or ./HexMeshing ../../../Examples/kitty/polycube.tet.vtk
 - The above command outputs two files: surface_division.vtk and volume_division.vtk
 - Paraview can be used to open the vtk files to visualize the results.
