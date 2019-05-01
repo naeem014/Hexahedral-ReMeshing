@@ -2,10 +2,15 @@
 
 Remeshing Tetrahedral Polycube models to Hexahedral mesh. This project takes a vtk file of a tetrahedral polycube model and created a mesh data structure. The mesh data structure implements functions to extract boundary surfaces of input mesh, extract boundary edges of input mesh, divides each surface into quads, translates corner points to regular integer grid and volume division.
 
+## Dependencies
+- VTK library (https://vtk.org/Wiki/VTK/Building/Windows)
+- CMake (https://cmake.org/download/)
+- Microsoft Visual Studio
+
 ## Project setup
 - Clone the project to local machine.
 - Enter the project directory and make new directory e.g mkdir build
-- Open CMake GUI which can be downloaded from here: https://cmake.org/download/
+- Open CMake GUI
 - Click Browse source and select the project directory
 - Click Browse build and select the build folder inside project directory
 - Click Configure
